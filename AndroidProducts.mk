@@ -17,4 +17,5 @@
 #
 
 PRODUCT_MAKEFILES := \
-    $(LOCAL_DIR)/omni_skomer.mk
+    $(LOCAL_DIR)/omni_skomer.mk \
+    $(LOCAL_DIR)/zombi_skomer.mk

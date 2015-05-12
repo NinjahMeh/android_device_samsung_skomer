@@ -16,13 +16,13 @@
 #
 
 # Inherit Omni GSM telephony parts
-$(call inherit-product, vendor/omni/config/gsm.mk)
+$(call inherit-product, vendor/zombi/config/gsm.mk)
 
 # Inherit from the common Open Source product configuration
 $(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base_telephony.mk)
 
 # Inherit from our omni product configuration
-$(call inherit-product, vendor/omni/config/common.mk)
+$(call inherit-product, vendor/zombi/config/common.mk)
 
 # This is where we'd set a backup provider if we had one
 #$(call inherit-product, device/sample/products/backup_overlay.mk)
@@ -30,7 +30,7 @@ $(call inherit-product, device/samsung/skomer/skomer.mk)
 
 # Device identifier
 PRODUCT_DEVICE := skomer
-PRODUCT_NAME := omni_skomer
+PRODUCT_NAME := zombi_skomer
 PRODUCT_BRAND := samsung
 PRODUCT_MODEL := GT-S7710
 PRODUCT_MANUFACTURER := samsung
