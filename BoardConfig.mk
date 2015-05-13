@@ -1,6 +1,7 @@
 #
 # Copyright (C) 2013 The Android Open Source Project
 # Copyright (C) 2013 Óliver García Albertos (oliverarafo@gmail.com)
+# Copyright (C) 2014 Stefan Berger (s.berger81@gmail.com)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,6 +28,9 @@ TARGET_NO_RADIOIMAGE := true
 TARGET_BOARD_PLATFORM := montblanc
 TARGET_SOC := u8500
 COMMON_GLOBAL_CFLAGS += -DSTE_HARDWARE -DSTE_SAMSUNG_HARDWARE
+BOARD_USES_STE_HARDWARE := true
+BOARD_USES_STE_SAMSUNG_HARDWARE := true
+TARGET_ENABLE_NON_PIE_SUPPORT := true
 
 # Architecture
 TARGET_ARCH := arm
@@ -52,17 +56,28 @@ TARGET_KERNEL_CONFIG := skomer_defconfig
 TARGET_KERNEL_SOURCE := kernel/samsung/skomer
 TARGET_USE_ST_ERICSSON_KERNEL := true
 BOARD_KERNEL_BASE := 0x00000000
-BOARD_RECOVERY_BASE := 0x00000000
 BOARD_KERNEL_PAGESIZE := 2048
 
 # Graphics
 USE_OPENGL_RENDERER := true
 BOARD_EGL_CFG := device/samsung/skomer/configs/lib/egl/egl.cfg
-COMMON_GLOBAL_CFLAGS += -DEGL_NEEDS_FNW -DFORCE_SCREENSHOT_CPU_PATH
+COMMON_GLOBAL_CFLAGS += -DFORCE_SCREENSHOT_CPU_PATH
+BOARD_EGL_NEEDS_LEGACY_FB := true
+BOARD_EGL_WORKAROUND_BUG_10194508 := true
+BOARD_USES_LEGACY_ACQUIRE_WVM := true
 
 # Screen
 TARGET_SCREEN_HEIGHT := 800
 TARGET_SCREEN_WIDTH := 480
+
+# Camera
+COMMON_GLOBAL_CFLAGS += -DNEEDS_VECTORIMPL_SYMBOLS -DADD_LEGACY_ACQUIRE_BUFFER_SYMBOL
+
+# Generic BLN
+BOARD_HAVE_GENERIC_BLN := true
+
+# Ramdisk
+TARGET_PROVIDES_ENVIRON_RC := true
 
 # Wifi
 BOARD_WLAN_DEVICE := bcmdhd
@@ -80,6 +95,7 @@ WIFI_DRIVER_MODULE_NAME := "dhd"
 WIFI_DRIVER_MODULE_ARG := "firmware_path=/system/etc/wifi/bcmdhd_sta.bin nvram_path=/system/etc/wifi/nvram_net.txt"
 WIFI_DRIVER_MODULE_AP_ARG := "firmware_path=/system/etc/wifi/bcmdhd_apsta.bin nvram_path=/system/etc/wifi/nvram_net.txt"
 BOARD_NO_APSME_ATTR := true
+BOARD_NO_WIFI_HAL := true
 
 # Bluetooth
 BOARD_HAVE_BLUETOOTH := true
@@ -89,17 +105,17 @@ BOARD_BLUEDROID_VENDOR_CONF := device/samsung/skomer/bluetooth/btvendor_skomer.t
 
 # RIL
 BOARD_RIL_CLASS := ../../../device/samsung/skomer/ril/
+BOARD_NEEDS_SEC_RIL_WORKAROUND := true
 
 # Browser
 ENABLE_WEBGL := true
 
 # Audio
 BOARD_USES_ALSA_AUDIO := true
-COMMON_GLOBAL_CFLAGS += -DMR0_AUDIO_BLOB
 BOARD_HAVE_PRE_KITKAT_AUDIO_BLOB := true
-
-# Misc
-COMMON_GLOBAL_CFLAGS += -DNEEDS_VECTORIMPL_SYMBOLS
+COMMON_GLOBAL_CFLAGS += -DMR0_AUDIO_BLOB -DMR1_AUDIO_BLOB -DBOARD_CANT_REALLOCATE_OMX_BUFFERS
+USE_LEGACY_AUDIO_POLICY := 1
+BOARD_USES_LEGACY_MMAP := true
 
 # Vold
 BOARD_VOLD_MAX_PARTITIONS := 25
@@ -110,24 +126,37 @@ BOARD_VOLD_DISC_HAS_MULTIPLE_MAJORS := true
 BOARD_LPM_BOOT_ARGUMENT_NAME := lpm_boot
 BOARD_LPM_BOOT_ARGUMENT_VALUE := 1
 
+# SELinux
+HAVE_SELINUX := true
+BOARD_SEPOLICY_DIRS += device/samsung/skomer/sepolicy
+BOARD_SEPOLICY_UNION += file_contexts
+
 # Recovery
+TARGET_RECOVERY_FSTAB := device/samsung/skomer/rootdir/fstab.samsungskomer
+RECOVERY_FSTAB_VERSION := 2
+BOARD_SUPPRESS_EMMC_WIPE := true
 BOARD_UMS_LUNFILE := "/sys/devices/platform/musb-ux500.0/musb-hdrc/gadget/lun0/file"
 TARGET_USE_CUSTOM_LUN_FILE_PATH := "/sys/devices/platform/musb-ux500.0/musb-hdrc/gadget/lun%d/file"
 
-# TWRP flags
+# TWRP Recovery defines
+TW_DISABLE_TTF := true
 DEVICE_RESOLUTION := 480x800
-RECOVERY_GRAPHICS_USE_LINELENGTH := true
 RECOVERY_SDCARD_ON_DATA := true
-TARGET_RECOVERY_FSTAB := device/samsung/skomer/rootdir/fstab.samsungskomer
-TW_HAS_NO_RECOVERY_PARTITION := true
-TW_FLASH_FROM_STORAGE := true
-TW_EXTERNAL_STORAGE_PATH := "/storage/sdcard1"
-TW_EXTERNAL_STORAGE_MOUNT_POINT := "/storage/sdcard1"
-TW_DEFAULT_EXTERNAL_STORAGE := true
-TW_INCLUDE_FUSE_EXFAT := false
-TW_BOARD_CUSTOM_GRAPHICS := ../../../device/samsung/skomer/recovery/twrp-graphics.c
-TW_BRIGHTNESS_PATH := /sys/class/backlight/panel/brightness
-TW_MAX_BRIGHTNESS := 255
-TW_NO_USB_STORAGE := true
+TW_INTERNAL_STORAGE_PATH := "/data/media"
+TW_INTERNAL_STORAGE_MOUNT_POINT := "data"
+TW_EXTERNAL_STORAGE_PATH := "/external_sd"
+TW_EXTERNAL_STORAGE_MOUNT_POINT := "external_sd"
 TW_NO_REBOOT_BOOTLOADER := true
 TW_HAS_DOWNLOAD_MODE := true
+BOARD_HAS_NO_REAL_SDCARD := true
+TW_NO_USB_STORAGE := true
+TW_BRIGHTNESS_PATH := "/sys/devices/mcde_disp_s6e63m0_dsi.0/backlight/panel/brightness"
+TW_MAX_BRIGHTNESS := 255
+TW_INCLUDE_CRYPTO_SAMSUNG := true
+TW_INCLUDE_CRYPTO := true
+TW_CRYPTO_FS_TYPE := "ext4"
+TW_CRYPTO_REAL_BLKDEV := "/dev/block/mmcblk0p25"
+TW_CRYPTO_MNT_POINT := "/data"
+TW_CRYPTO_FS_OPTIONS := "noatime,nosuid,nodev,discard,noauto_da_alloc,journal_async_commit,errors=panic    wait,check"
+TW_CRYPTO_FS_FLAGS := "0x00000406"
+TW_CRYPTO_KEY_LOC := "footer"

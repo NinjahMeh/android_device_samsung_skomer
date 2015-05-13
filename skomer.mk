@@ -18,27 +18,38 @@
 
 DEVICE_PACKAGE_OVERLAYS += $(LOCAL_PATH)/overlay
 
+# Inherit from those products. Most specific first.
+$(call inherit-product, build/target/product/full_base_telephony.mk)
+$(call inherit-product, build/target/product/languages_full.mk)
+
 # Use the Dalvik VM specific for devices with 1024 MB of RAM
 $(call inherit-product, frameworks/native/build/phone-xhdpi-1024-dalvik-heap.mk)
 
-# Inherit the proprietary vendors blobs for Samsung Skomer
-$(call inherit-product, vendor/samsung/skomer/skomer-vendor.mk)
-
+# Inherit the proprietary vendors blobs for Samsung skomer.
+$(call inherit-product-if-exists, vendor/samsung/skomer/skomer-vendor.mk)
 
 # Ramdisk
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/rootdir/init.samsungskomer.rc:root/init.samsungskomer.rc \
+    $(LOCAL_PATH)/rootdir/init.environ.rc:root/init.environ.rc \
     $(LOCAL_PATH)/rootdir/ueventd.samsungskomer.rc:root/ueventd.samsungskomer.rc \
     $(LOCAL_PATH)/rootdir/init.samsungskomer.usb.rc:root/init.samsungskomer.usb.rc \
     $(LOCAL_PATH)/rootdir/fstab.samsungskomer:root/fstab.samsungskomer \
     $(LOCAL_PATH)/rootdir/lpm.rc:root/lpm.rc
 
-# Recovery
+# Recovery ramdisk, libraries and modules.
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/recovery/init.recovery.samsungskomer.rc:root/init.recovery.samsungskomer.rc \
-    $(LOCAL_PATH)/recovery/lib/modules/j4fs.ko:recovery/root/lib/modules/j4fs.ko \
-    $(LOCAL_PATH)/recovery/lib/modules/param.ko:recovery/root/lib/modules/param.ko \
-    $(LOCAL_PATH)/recovery/twrp.fstab:recovery/root/etc/twrp.fstab
+    $(LOCAL_PATH)/recovery/rootdir/init.recovery.samsungskomer.rc:root/init.recovery.samsungskomer.rc \
+    $(LOCAL_PATH)/recovery/rootdir/etc/twrp.fstab:recovery/root/etc/twrp.fstab \
+    $(LOCAL_PATH)/recovery/rootdir/sbin/libkeyutils.so:recovery/root/sbin/libkeyutils.so \
+    $(LOCAL_PATH)/recovery/rootdir/sbin/libsec_km.so:recovery/root/sbin/libsec_km.so \
+    $(LOCAL_PATH)/recovery/rootdir/sbin/libsec_ecryptfs.so:recovery/root/sbin/libsec_ecryptfs.so \
+    $(LOCAL_PATH)/recovery/rootdir/lib/modules/j4fs.ko:recovery/root/lib/modules/j4fs.ko \
+    $(LOCAL_PATH)/recovery/rootdir/lib/modules/param.ko:recovery/root/lib/modules/param.ko
+
+# Fstrim cron job
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/init.d/69fstrim_crond:system/etc/init.d/69fstrim_crond
 
 # Inputs
 PRODUCT_COPY_FILES += \
@@ -59,6 +70,9 @@ PRODUCT_PROPERTY_OVERRIDES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/etc/media_profiles.xml:system/etc/media_profiles.xml \
     $(LOCAL_PATH)/configs/etc/media_codecs.xml:system/etc/media_codecs.xml \
+    $(LOCAL_PATH)/configs/etc/media_codecs_google_video.xml:system/etc/media_codecs_google_video.xml \
+    frameworks/av/media/libstagefright/data/media_codecs_google_audio.xml:system/etc/media_codecs_google_audio.xml \
+    frameworks/av/media/libstagefright/data/media_codecs_google_telephony.xml:system/etc/media_codecs_google_telephony.xml \
     $(LOCAL_PATH)/configs/omxloaders:system/omxloaders
 PRODUCT_PACKAGES += \
     libomxil-bellagio
@@ -84,9 +98,16 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 # Wifi
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/configs/etc/wifi/wpa_supplicant.conf:system/etc/wifi/wpa_supplicant.conf
+    $(LOCAL_PATH)/configs/etc/wifi/wpa_supplicant.conf:system/etc/wifi/wpa_supplicant.conf \
+    $(LOCAL_PATH)/configs/etc/wifi/wpa_supplicant_overlay.conf:system/etc/wifi/wpa_supplicant_overlay.conf \
+    $(LOCAL_PATH)/configs/etc/wifi/p2p_supplicant_overlay.conf:system/etc/wifi/p2p_supplicant_overlay.conf
 PRODUCT_PACKAGES += \
+    libwpa_client \
+    hostapd \
+    dhcpcd.conf \
+    wpa_supplicant \
     libnetcmdiface
+
 PRODUCT_PROPERTY_OVERRIDES += \
     wifi.interface=wlan0 \
     wifi.supplicant_scan_interval=15
@@ -106,8 +127,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.telephony.call_ring.multiple=false \
     ro.telephony.ril_class=SamsungU8500RIL \
     ro.telephony.sends_barcount=1 \
-    ro.ril.gprsclass=10 \
-    ro.ril.hsxpa=1
+    ro.telephony.default_network=0 \
+    ste.special_fast_dormancy=true
 
 # GPS
 PRODUCT_COPY_FILES += \
@@ -120,10 +141,9 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/etc/asound.conf:system/etc/asound.conf
 PRODUCT_PACKAGES += \
     audio.a2dp.default \
+    audio.r_submix.default \
     audio.usb.default \
-    libasound \
-    libaudioutils \
-    libtinyalsa
+    libasound
 
 # Sensors
 PRODUCT_PACKAGES += \
@@ -133,16 +153,29 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     power.montblanc
 
+# Dalvik
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.zygote.disable_gl_preload=true
+
 # USB
 PRODUCT_PROPERTY_OVERRIDES += \
     persist.sys.usb.config=mtp,adb \
-    persist.service.adb.enable=1 \
-    ste.special_fast_dormancy=false
+    persist.service.adb.enable=1
 
 # Charger
-PRODUCT_PACKAGES += \
-    charger \
-    charger_res_images
+# Charger Prebuilt (temporary solution for lollipop)
+# Use prebuilt charger and images from KitKat
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/prebuilt/charger/charger:root/sbin/charger \
+    $(LOCAL_PATH)/prebuilt/charger/images/battery_0.png:root/res/images/charger/battery_0.png \
+    $(LOCAL_PATH)/prebuilt/charger/images/battery_1.png:root/res/images/charger/battery_1.png \
+    $(LOCAL_PATH)/prebuilt/charger/images/battery_2.png:root/res/images/charger/battery_2.png \
+    $(LOCAL_PATH)/prebuilt/charger/images/battery_3.png:root/res/images/charger/battery_3.png \
+    $(LOCAL_PATH)/prebuilt/charger/images/battery_4.png:root/res/images/charger/battery_4.png \
+    $(LOCAL_PATH)/prebuilt/charger/images/battery_5.png:root/res/images/charger/battery_5.png \
+    $(LOCAL_PATH)/prebuilt/charger/images/battery_charge.png:root/res/images/charger/battery_charge.png \
+    $(LOCAL_PATH)/prebuilt/charger/images/battery_fail.png:root/res/images/charger/battery_fail.png \
+
 
 # Permissions
 PRODUCT_COPY_FILES += \
@@ -151,6 +184,7 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.wifi.direct.xml:system/etc/permissions/android.hardware.wifi.direct.xml \
     frameworks/native/data/etc/handheld_core_hardware.xml:system/etc/permissions/handheld_core_hardware.xml \
     frameworks/native/data/etc/android.hardware.bluetooth.xml:system/etc/permissions/android.hardware.bluetooth.xml \
+    frameworks/native/data/etc/android.hardware.camera.autofocus.xml:system/etc/permissions/android.hardware.camera.autofocus.xml \
     frameworks/native/data/etc/android.hardware.camera.flash-autofocus.xml:system/etc/permissions/android.hardware.camera.flash-autofocus.xml \
     frameworks/native/data/etc/android.hardware.camera.front.xml:system/etc/permissions/android.hardware.camera.front.xml \
     frameworks/native/data/etc/android.hardware.location.gps.xml:system/etc/permissions/android.hardware.location.gps.xml \
@@ -172,16 +206,22 @@ PRODUCT_PACKAGES += \
 
 # Misc packages
 PRODUCT_PACKAGES += \
-    Torch \
-	SamsungServiceMode \
+    OmniTorch \
     com.android.future.usb.accessory
+
+# set SELinux property value
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.build.selinux=1
 
 # Non-device-specific props
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.com.google.locationfeatures=1 \
     ro.setupwizard.mode=OPTIONAL \
     ro.setupwizard.enable_bypass=1 \
-    ro.config.sync=yes
+    ro.config.sync=yes \
+    ro.config.ntp.server_poll=86400000 \
+    ro.config.ntp.clock_sync=1800000 \
+    ro.config.ntp.sync_mode=3
 
 # Define kind of DPI
 PRODUCT_AAPT_CONFIG := normal hdpi

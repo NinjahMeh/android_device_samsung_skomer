@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2013 The Android Open Source Project
-# Copyright (C) 2013 Felix Obenuhber (f.obenhuber@gmail.com)
+# Copyright (C) 2013 Óliver García Albertos (oliverarafo@gmail.com)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,26 +15,16 @@
 # limitations under the License.
 #
 
-# Inherit Omni GSM telephony parts
+# Inherit from Omni custom product configuration
+$(call inherit-product, vendor/zombi/config/common.mk)
 $(call inherit-product, vendor/zombi/config/gsm.mk)
 
-# Inherit from the common Open Source product configuration
-$(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base_telephony.mk)
-
-# Inherit from our omni product configuration
-$(call inherit-product, vendor/zombi/config/common.mk)
-
-# This is where we'd set a backup provider if we had one
-#$(call inherit-product, device/sample/products/backup_overlay.mk)
+# Inherit device configuration
 $(call inherit-product, device/samsung/skomer/skomer.mk)
 
 # Device identifier
-PRODUCT_DEVICE := skomer
 PRODUCT_NAME := zombi_skomer
+PRODUCT_DEVICE := skomer
 PRODUCT_BRAND := samsung
+PRODUCT_MANUFACTURER := Samsung
 PRODUCT_MODEL := GT-S7710
-PRODUCT_MANUFACTURER := samsung
-
-# Set build fingerprint and ID
-BUILD_ID := $(shell date -u +%Y%m%d)
-PRODUCT_BUILD_PROP_OVERRIDES += PRODUCT_NAME=omni_skomer BUILD_FINGERPRINT=omni/omni_skomer/skomer:4.4.2/$(BUILD_ID) PRIVATE_BUILD_DESC="GT-S7710 4.4.2"
