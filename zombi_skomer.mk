@@ -15,6 +15,9 @@
 # limitations under the License.
 #
 
+# Inherit from those products. Most specific first.
+$(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base.mk)
+
 # Inherit from Omni custom product configuration
 $(call inherit-product, vendor/zombi/config/common.mk)
 $(call inherit-product, vendor/zombi/config/gsm.mk)
