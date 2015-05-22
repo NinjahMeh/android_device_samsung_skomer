@@ -32,6 +32,9 @@ BOARD_USES_STE_HARDWARE := true
 BOARD_USES_STE_SAMSUNG_HARDWARE := true
 TARGET_ENABLE_NON_PIE_SUPPORT := true
 
+# Compatibility with pre-kitkat Sensor HALs
+SENSORS_NEED_SETRATE_ON_ENABLE := true
+
 # Architecture
 TARGET_ARCH := arm
 TARGET_ARCH_VARIANT := armv7-a-neon
